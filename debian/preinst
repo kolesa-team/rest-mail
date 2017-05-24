@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  install)
+    adduser --system --home /opt/rest-mail/ --group rest-mail
+    ;;
+
+  upgrade)
+    ;;
+
+  abort-upgrade)
+    ;;
+
+  *)
+    echo "preinst called with unknown argument \`$1'" >&2
+    exit 1
+    ;;
+esac
+
+exit 0
