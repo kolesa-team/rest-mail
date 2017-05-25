@@ -23,7 +23,7 @@ func main() {
 
 	app.Name = "rest-mail"
 	app.Usage = "REST mail sender"
-	app.Version = "0.0.1"
+	app.Version = "0.0.2"
 	app.Author = "Igor Borodikhin"
 	app.Email = "iborodikhin@gmail.com"
 	app.Action = actionRun

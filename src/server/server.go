@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"../logger"
@@ -24,6 +25,7 @@ type Server struct {
 	dialer                   *gomail.Dialer
 	mailChan                 chan *gomail.Message
 	isMailerOpen             bool
+	mutext                   sync.RWMutex
 }
 
 func NewServer() *Server {
@@ -95,7 +97,7 @@ func (s *Server) Listen(done, stop chan struct{}) {
 				} else {
 					logger.Instance().WithFields(logrus.Fields{
 						"from": m.GetHeader("From"),
-						"to": m.GetHeader("To"),
+						"to":   m.GetHeader("To"),
 					}).Debug("Message sent")
 				}
 			case <-time.After(30 * time.Second):
@@ -144,16 +146,31 @@ func (s *Server) mux() *web.Mux {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		message := gomail.NewMessage()
-		message.SetBody(r.Header.Get("Content-Type"), string(body))
+		headers := make(map[string]string)
 
 		for k, _ := range r.Header {
-			if strings.HasPrefix(strings.ToLower(k), "x-") {
-				message.SetHeader(k[2:], r.Header.Get(k))
+			k = strings.ToLower(k)
+
+			if strings.HasPrefix(k, "x-") {
+				headers[k[2:]] = r.Header.Get(k)
 			}
 		}
 
-		s.mailChan <- message
+		for _, v := range strings.Split(headers["to"], ",") {
+			message := gomail.NewMessage()
+
+			message.SetBody(r.Header.Get("Content-Type"), string(body))
+			message.SetAddressHeader("To", strings.Trim(v, " "), "")
+
+			for key, value := range headers {
+				if key != "to" {
+					message.SetHeader(strings.ToUpper(key[:1])+key[1:], value)
+				}
+			}
+
+			s.mailChan <- message
+		}
+
 		http.Error(w, http.StatusText(http.StatusOK), http.StatusOK)
 	})
 
