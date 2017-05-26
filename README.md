@@ -18,7 +18,7 @@ HTTP interface for email sending
 ## Mail sending
 
     curl -XPOST 'http://rest-mail.acme.com:8899/' \
-     -H "X-To: bigboss@acme.com" \
+     -H "X-To: bigboss@acme.com, andrew@acme.com" \
      -H "X-From: bob@acme.com" \
      -H "X-Subject: Quarter report" \
      -H "Content-Type: text/html" \
